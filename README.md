@@ -1,58 +1,116 @@
-# JWT Authentication Backend
+# JWT Authentication Backend using Spring Boot
 
-This project implements JWT authentication using Spring Boot, Spring Security, Spring Data JPA, and an in-memory H2 database.
+## Project Overview
 
-## Features
+This project is a backend authentication system developed using Spring Boot. It implements JSON Web Token (JWT) based authentication for user session management and route protection. The application supports user registration, user login, JWT generation, validation of authenticated requests, and token invalidation through logout.
 
-- User registration with encrypted passwords
-- Login with username and password
-- JWT token generation for authenticated sessions
-- Protected route access using `Authorization: Bearer <token>`
-- Logout with token invalidation using an in-memory blacklist
-- Seeded demo account for quick testing in Postman
+The objective of this project is to demonstrate how stateless authentication can be implemented in a REST API using Spring Security and JWT.
 
-## Tech Stack
+## Objective
+
+The backend was developed to fulfill the following requirements:
+
+- Implement JWT authentication in a Spring Boot application
+- Authenticate users using username and password
+- Generate JWT tokens for valid sessions
+- Protect secured routes using bearer token authentication
+- Demonstrate authentication flow through Postman
+
+## Technology Stack
 
 - Java 17
 - Spring Boot 3.2.5
 - Spring Security
 - Spring Data JPA
-- H2 Database
-- JJWT
+- H2 In-Memory Database
+- JJWT library for token generation and validation
+- Maven
 
 ## Project Structure
 
 ```text
 src/
-├── main/
-│   ├── java/com/example/demo/
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── dto/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   ├── security/
-│   │   └── service/
-│   └── resources/
-└── test/
+|-- main/
+|   |-- java/com/example/demo/
+|   |   |-- config/
+|   |   |-- controller/
+|   |   |-- dto/
+|   |   |-- model/
+|   |   |-- repository/
+|   |   |-- security/
+|   |   `-- service/
+|   `-- resources/
+|-- test/
 docs/
-└── screenshots/
+`-- screenshots/
 ```
 
-## Default Test User
+## Authentication Flow
+
+The authentication process in this project works as follows:
+
+1. A user sends credentials to the login endpoint.
+2. The backend verifies the username and password using Spring Security.
+3. If authentication is successful, a JWT token is generated and returned.
+4. The client includes this token in the `Authorization` header as `Bearer <token>` for protected requests.
+5. A custom JWT filter validates the token before allowing access to secured routes.
+6. During logout, the token is stored in an in-memory blacklist so it can no longer be used.
+
+This design demonstrates stateless authentication because the server does not maintain a traditional HTTP session.
+
+## Main Components
+
+### Controller Layer
+
+The controller layer exposes the API endpoints for authentication and protected access.
+
+- `POST /auth/register` registers a new user
+- `POST /auth/login` authenticates a user and returns a JWT token
+- `GET /auth/protected` verifies access to a protected route
+- `POST /auth/logout` invalidates the current token
+- `GET /` provides a simple API status response
+
+### Service Layer
+
+The service layer handles:
+
+- user registration
+- login validation
+- JWT generation
+- logout token invalidation
+- loading users from the database
+
+### Security Layer
+
+The security layer contains:
+
+- `SecurityConfig` for Spring Security configuration
+- `JwtUtil` for token generation and validation
+- `JwtAuthenticationFilter` for extracting and validating bearer tokens from requests
+
+### Persistence Layer
+
+The persistence layer uses JPA and H2 database.
+
+- `User` entity stores username, password, and role
+- `UserRepository` performs database access
+
+## Database and Demo User
+
+The application uses an H2 in-memory database. A default demo user is inserted automatically at startup for testing purposes.
 
 - Username: `admin`
 - Password: `1234`
 
-This user is created automatically when the application starts.
+Passwords are stored in encrypted form using BCrypt.
 
 ## API Endpoints
 
-### `POST /auth/register`
+### 1. Register User
 
-Registers a new user.
+**Endpoint:** `POST /auth/register`
 
-Request body:
+**Request Body**
 
 ```json
 {
@@ -61,11 +119,15 @@ Request body:
 }
 ```
 
-### `POST /auth/login`
+**Purpose**
 
-Authenticates a user and returns a JWT token.
+Creates a new user account in the database.
 
-Request body:
+### 2. Login User
+
+**Endpoint:** `POST /auth/login`
+
+**Request Body**
 
 ```json
 {
@@ -74,7 +136,7 @@ Request body:
 }
 ```
 
-Response:
+**Sample Response**
 
 ```json
 {
@@ -84,66 +146,104 @@ Response:
 }
 ```
 
-### `GET /auth/protected`
+**Purpose**
 
-Protected endpoint. Requires a valid bearer token.
+Authenticates the user and returns a JWT token for further requests.
 
-Header:
+### 3. Access Protected Route
 
-```text
-Authorization: Bearer <jwt-token>
-```
+**Endpoint:** `GET /auth/protected`
 
-### `POST /auth/logout`
-
-Invalidates the current token by adding it to the server-side blacklist.
-
-Header:
+**Header**
 
 ```text
 Authorization: Bearer <jwt-token>
 ```
 
-## How to Run
+**Sample Response**
 
-### 1. Start the application
-
-```bash
-./mvnw spring-boot:run
+```json
+{
+  "message": "You accessed a protected route as admin"
+}
 ```
 
-On Windows PowerShell:
+**Purpose**
+
+Demonstrates that access is granted only when a valid token is supplied.
+
+### 4. Logout
+
+**Endpoint:** `POST /auth/logout`
+
+**Header**
+
+```text
+Authorization: Bearer <jwt-token>
+```
+
+**Sample Response**
+
+```json
+{
+  "message": "Token invalidated successfully"
+}
+```
+
+**Purpose**
+
+Invalidates the active token so it cannot be reused.
+
+## Security Features Implemented
+
+- Stateless authentication using JWT
+- Password encryption using BCrypt
+- Route protection using Spring Security
+- Token validation through a custom filter
+- Token invalidation during logout using blacklist logic
+- One-hour token expiration
+
+## Postman Demonstration
+
+The authentication flow was tested using Postman. The required screenshots for submission are stored in [docs/screenshots](/C:/Users/monda/warehouse/fsd2/Exp6/docs/screenshots).
+
+The screenshots demonstrate:
+
+1. Successful login request and JWT token generation
+2. Successful access to a protected route using the token
+3. Logout and token invalidation behavior
+
+Detailed Postman request flow is documented in [postman-guide.md](/C:/Users/monda/warehouse/fsd2/Exp6/docs/postman-guide.md).
+
+## How to Run the Project
+
+### Using PowerShell on Windows
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-### 2. Test in Postman
+### Application Base URL
 
-1. Send a `POST` request to `http://localhost:8080/auth/login` with the demo credentials.
-2. Copy the JWT token from the response.
-3. Send a `GET` request to `http://localhost:8080/auth/protected` with the `Authorization` header set to `Bearer <token>`.
-4. Send a `POST` request to `http://localhost:8080/auth/logout` with the same `Authorization` header.
-5. Retry `GET /auth/protected` using the same token to show invalidation.
+```text
+http://localhost:8080
+```
 
-## Required Screenshots
+## Testing
 
-Store screenshots inside [docs/screenshots](/C:/Users/monda/warehouse/fsd2/Exp6/docs/screenshots).
+The project includes automated tests to verify:
 
-At minimum capture:
+- application context loading
+- successful login
+- access to protected route using JWT
+- token invalidation after logout
 
-1. Successful login request showing the JWT token in the response.
-2. Protected route accessed successfully using the token.
-3. Logout request or protected route failure after logout showing token invalidation.
+Tests were executed successfully using:
 
-Suggested filenames:
+```powershell
+.\mvnw.cmd test
+```
 
-- `01-login-success.png`
-- `02-protected-route-success.png`
-- `03-logout-token-invalidated.png`
+## Conclusion
 
-## Notes
-
-- Passwords are hashed using BCrypt.
-- JWT tokens expire after 1 hour.
-- Logout invalidation is in-memory, which is sufficient for this assignment/demo but not ideal for distributed production deployments.
+This project demonstrates a complete JWT-based authentication workflow in Spring Boot. It includes authentication, authorization, protected endpoint access, and logout handling. The implementation shows the practical use of Spring Security with JWT for secure backend session management in REST APIs.
